@@ -81,6 +81,17 @@ export async function finishTurn(
   if (error) throw error;
 }
 
+export async function hostForceAdvance(
+  sessionId: string,
+  deviceId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('host_force_advance', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+  });
+  if (error) throw error;
+}
+
 export async function setDice(
   sessionId: string,
   deviceId: string,

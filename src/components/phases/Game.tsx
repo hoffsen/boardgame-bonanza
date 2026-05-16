@@ -4,6 +4,7 @@ import PositionTrack from '../PositionTrack';
 import TurnBanner from '../TurnBanner';
 import RollButton from '../RollButton';
 import TurnActions from '../TurnActions';
+import HostSkipButton from '../HostSkipButton';
 import ChallengeChain from '../ChallengeChain';
 import EndSessionButton from '../EndSessionButton';
 import DicePicker from '../DicePicker';
@@ -21,10 +22,14 @@ export default function Game({ session, players, me, isHost, deviceId }: Props) 
   const isSpectator = !me || me.turn_order === null;
   const iAmFinished = !!me?.finished_at;
 
-  // After my roll, the turn doesn't auto-advance. Until I tap Did it / Skip,
-  // current_player_id is still me and last_turn.by_player_id is me.
-  const myRollIsPending =
-    myTurn && session.last_turn?.by_player_id === me?.id;
+  const turnIsPending =
+    !!session.last_turn &&
+    !!session.current_player_id &&
+    session.last_turn.by_player_id === session.current_player_id;
+  const myRollIsPending = myTurn && turnIsPending;
+
+  const currentPlayer = players.find((p) => p.id === session.current_player_id);
+  const showHostSkip = isHost && turnIsPending && !myRollIsPending && !!currentPlayer;
 
   return (
     <main className="min-h-screen p-6 max-w-2xl mx-auto space-y-5">
@@ -59,6 +64,14 @@ export default function Game({ session, players, me, isHost, deviceId }: Props) 
       ) : myTurn ? (
         <RollButton sessionId={session.id} deviceId={deviceId} sides={session.dice_sides} />
       ) : null}
+
+      {showHostSkip && currentPlayer && (
+        <HostSkipButton
+          sessionId={session.id}
+          deviceId={deviceId}
+          currentPlayerName={currentPlayer.name}
+        />
+      )}
 
       {session.last_turn && <ChallengeChain lastTurn={session.last_turn} />}
     </main>
