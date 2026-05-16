@@ -1,6 +1,8 @@
 import type { PlayerRow } from '../types/db';
 
-export default function PositionTrack({ players }: { players: PlayerRow[] }) {
+type Props = { players: PlayerRow[]; currentPlayerId?: string | null };
+
+export default function PositionTrack({ players, currentPlayerId }: Props) {
   const spaces = Array.from({ length: 41 }, (_, i) => i + 1);
   return (
     <div className="overflow-x-auto -mx-2 px-2">
@@ -21,7 +23,9 @@ export default function PositionTrack({ players }: { players: PlayerRow[] }) {
                 {here.map((p) => (
                   <span
                     key={p.id}
-                    className="bg-indigo-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold"
+                    className={`bg-indigo-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold ${
+                      p.id === currentPlayerId ? 'ring-2 ring-amber-400' : ''
+                    }`}
                     title={p.name}
                   >
                     {p.name[0]?.toUpperCase() ?? '?'}
