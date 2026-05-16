@@ -5,7 +5,7 @@ Web companion for a physical board game. Scan a QR on the board → join or host
 ## Setup
 
 1. `cp .env.example .env` and fill in your Supabase project URL + anon key.
-2. Apply `supabase/migrations/0001_init.sql` in the Supabase SQL editor (or via the CLI).
+2. Apply the schema SQL in the Supabase SQL editor (kept out of the repo for this POC).
 3. `npm install`
 4. `npm run dev` → open `http://localhost:5173/#/b/test-board`
 
