@@ -23,7 +23,7 @@ export default function Lobby({ session, players, isHost, deviceId }: Props) {
     <main className="min-h-screen p-6 max-w-2xl mx-auto space-y-5">
       <header className="flex items-baseline justify-between gap-3">
         <h1 className="text-2xl font-semibold">Lobby</h1>
-        {isHost && <EndSessionButton sessionId={session.id} />}
+        <EndSessionButton sessionId={session.id} />
       </header>
 
       <ShareLink sessionId={session.id} />

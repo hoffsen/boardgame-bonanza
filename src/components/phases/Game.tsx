@@ -35,7 +35,7 @@ export default function Game({ session, players, me, isHost, deviceId }: Props) 
     <main className="min-h-screen p-6 max-w-2xl mx-auto space-y-5">
       <header className="flex items-baseline justify-between gap-3">
         <h1 className="text-2xl font-semibold">Bonanza</h1>
-        {isHost && <EndSessionButton sessionId={session.id} />}
+        <EndSessionButton sessionId={session.id} />
       </header>
 
       <TurnBanner session={session} players={players} myId={me?.id} />
