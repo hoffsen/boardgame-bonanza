@@ -27,7 +27,10 @@ export type PlayerRow = {
   turn_order: number | null;
   joined_at: string;
   finished_at: string | null;
+  skip_next_turn: boolean;
 };
+
+export type TurnOutcome = 'did_it' | 'skip';
 
 export type ChallengeCard = {
   prompt: string;

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { SessionRow, PlayerRow, TakeTurnResult, Theme, DealMode } from '../types/db';
+import type { SessionRow, PlayerRow, TakeTurnResult, Theme, DealMode, TurnOutcome } from '../types/db';
 
 export async function createSession(deviceId: string, hostName: string): Promise<string> {
   const { data, error } = await supabase.rpc('create_session', {
@@ -15,19 +15,11 @@ export async function joinSession(
   deviceId: string,
   name: string
 ): Promise<PlayerRow> {
-  const { error: insertError } = await supabase
-    .from('players')
-    .insert({ session_id: sessionId, device_id: deviceId, name });
-
-  // 23505 = unique_violation; means we're already a player. Anything else is fatal.
-  if (insertError && insertError.code !== '23505') throw insertError;
-
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .eq('session_id', sessionId)
-    .eq('device_id', deviceId)
-    .single();
+  const { data, error } = await supabase.rpc('join_session', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+    p_name: name,
+  });
   if (error) throw error;
   return data as PlayerRow;
 }
@@ -74,6 +66,19 @@ export async function takeTurn(
   });
   if (error) throw error;
   return data as TakeTurnResult;
+}
+
+export async function finishTurn(
+  sessionId: string,
+  deviceId: string,
+  outcome: TurnOutcome
+): Promise<void> {
+  const { error } = await supabase.rpc('finish_turn', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+    p_outcome: outcome,
+  });
+  if (error) throw error;
 }
 
 export async function setDice(

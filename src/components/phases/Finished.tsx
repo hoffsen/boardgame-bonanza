@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { SessionRow, PlayerRow } from '../../types/db';
 import { createSession } from '../../lib/session';
 import { getDeviceId } from '../../lib/deviceId';
-import ChallengeChain from '../ChallengeChain';
+import Leaderboard from '../Leaderboard';
 
 type Props = {
   session: SessionRow;
@@ -16,11 +16,13 @@ export default function Finished({ session, players, fallbackName }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const finishedCount = players.filter((p) => p.finished_at !== null).length;
   const winner = players.find((p) => p.id === session.winner_player_id);
+
   const heading =
     session.phase === 'finished'
       ? winner
-        ? `${winner.name} wins! 🎉`
+        ? `${winner.name} took first!`
         : 'Game over'
       : session.phase === 'ended'
         ? 'Session ended'
@@ -39,14 +41,17 @@ export default function Finished({ session, players, fallbackName }: Props) {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-5 text-center">
-        <h1 className="text-3xl font-semibold">{heading}</h1>
-        {session.last_turn && (
-          <div className="text-left">
-            <ChallengeChain lastTurn={session.last_turn} />
-          </div>
+    <main className="min-h-screen flex items-start justify-center p-6 pt-12">
+      <div className="w-full max-w-md space-y-5">
+        <h1 className="text-3xl font-semibold text-center">{heading}</h1>
+
+        {finishedCount > 0 && (
+          <section className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-slate-400">Final standings</p>
+            <Leaderboard players={players} />
+          </section>
         )}
+
         <button
           type="button"
           onClick={() => void newGame()}
@@ -55,11 +60,11 @@ export default function Finished({ session, players, fallbackName }: Props) {
         >
           {busy ? 'Creating…' : 'New game'}
         </button>
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="text-xs text-slate-500 hover:text-slate-300"
+          className="block mx-auto text-xs text-slate-500 hover:text-slate-300"
         >
           Back to home
         </button>

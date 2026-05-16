@@ -3,6 +3,7 @@ import PlayerList from '../PlayerList';
 import PositionTrack from '../PositionTrack';
 import TurnBanner from '../TurnBanner';
 import RollButton from '../RollButton';
+import TurnActions from '../TurnActions';
 import ChallengeChain from '../ChallengeChain';
 import EndSessionButton from '../EndSessionButton';
 import DicePicker from '../DicePicker';
@@ -18,6 +19,12 @@ type Props = {
 export default function Game({ session, players, me, isHost, deviceId }: Props) {
   const myTurn = !!me && session.current_player_id === me.id;
   const isSpectator = !me || me.turn_order === null;
+  const iAmFinished = !!me?.finished_at;
+
+  // After my roll, the turn doesn't auto-advance. Until I tap Did it / Skip,
+  // current_player_id is still me and last_turn.by_player_id is me.
+  const myRollIsPending =
+    myTurn && session.last_turn?.by_player_id === me?.id;
 
   return (
     <main className="min-h-screen p-6 max-w-2xl mx-auto space-y-5">
@@ -39,10 +46,16 @@ export default function Game({ session, players, me, isHost, deviceId }: Props) 
 
       <DicePicker sessionId={session.id} deviceId={deviceId} current={session.dice_sides} />
 
-      {isSpectator ? (
-        <p className="text-slate-500 text-sm text-center">
-          You joined mid-game — spectating until someone wins.
+      {iAmFinished ? (
+        <p className="text-emerald-400 text-sm text-center font-medium">
+          You finished — sit back and watch the rest play it out.
         </p>
+      ) : isSpectator ? (
+        <p className="text-slate-500 text-sm text-center">
+          Spectating. You can join the next game.
+        </p>
+      ) : myRollIsPending ? (
+        <TurnActions sessionId={session.id} deviceId={deviceId} />
       ) : myTurn ? (
         <RollButton sessionId={session.id} deviceId={deviceId} sides={session.dice_sides} />
       ) : null}
