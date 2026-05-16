@@ -33,6 +33,9 @@ export type ChallengeCard = {
   prompt: string;
   space: number;
   move_back: number;
+  kind: 'standard' | 'dojo';
+  opponent_id: string | null;
+  opponent_name: string | null;
 };
 
 export type LastTurn = {
