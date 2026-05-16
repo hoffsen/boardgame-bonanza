@@ -2,42 +2,47 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getDeviceId } from '../lib/deviceId';
 import { getDisplayName, setDisplayName } from '../lib/displayName';
-import { createOrJoinSession, joinAsPlayer } from '../lib/session';
-import type { SessionContext } from '../lib/session';
+import { fetchPlayer, fetchSession, joinSession } from '../lib/session';
+import type { SessionRow, PlayerRow } from '../types/db';
 import NameGate from '../components/NameGate';
-import Lobby from '../components/Lobby';
+import SessionView from '../components/SessionView';
 
-export default function Board() {
-  const { boardId } = useParams<{ boardId: string }>();
+export default function Session() {
+  const { sessionId } = useParams<{ sessionId: string }>();
   const [deviceId] = useState(() => getDeviceId());
   const [name, setName] = useState<string | null>(() => getDisplayName());
-  const [ctx, setCtx] = useState<SessionContext | null>(null);
+  const [session, setSession] = useState<SessionRow | null>(null);
+  const [myPlayer, setMyPlayer] = useState<PlayerRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!boardId || !name) return;
+    if (!sessionId || !name) return;
     let cancelled = false;
 
-    async function go(boardIdArg: string, nameArg: string) {
+    async function boot(sid: string, n: string) {
       try {
-        const result = await createOrJoinSession(boardIdArg, deviceId);
-        await joinAsPlayer(result.session.id, deviceId, nameArg);
-        if (!cancelled) setCtx(result);
+        const s = await fetchSession(sid);
+        const isLive = s.phase === 'lobby' || s.phase === 'playing';
+        const p = isLive ? await joinSession(sid, deviceId, n) : await fetchPlayer(sid, deviceId);
+        if (!cancelled) {
+          setSession(s);
+          setMyPlayer(p);
+        }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to join');
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load session');
       }
     }
 
-    void go(boardId, name);
+    void boot(sessionId, name);
     return () => {
       cancelled = true;
     };
-  }, [boardId, deviceId, name]);
+  }, [sessionId, deviceId, name]);
 
-  if (!boardId) {
+  if (!sessionId) {
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
-        <p className="text-red-400">Missing board ID.</p>
+        <p className="text-red-400">Missing session ID.</p>
       </main>
     );
   }
@@ -61,7 +66,7 @@ export default function Board() {
     );
   }
 
-  if (!ctx) {
+  if (!session) {
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
         <p className="text-slate-400">Connecting…</p>
@@ -69,5 +74,12 @@ export default function Board() {
     );
   }
 
-  return <Lobby ctx={ctx} deviceId={deviceId} playerName={name} boardId={boardId} />;
+  return (
+    <SessionView
+      initialSession={session}
+      myPlayer={myPlayer}
+      deviceId={deviceId}
+      fallbackName={name}
+    />
+  );
 }

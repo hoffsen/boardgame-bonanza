@@ -1,83 +1,16 @@
 import { supabase } from './supabase';
-import type { SessionRow, PlayerRow, DiceRollPayload } from '../types/db';
+import type { SessionRow, PlayerRow, TakeTurnResult } from '../types/db';
 
-export type Role = 'host' | 'player';
-
-export type SessionContext = {
-  session: SessionRow;
-  role: Role;
-};
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    (err as { code: string }).code === '23505'
-  );
-}
-
-async function fetchActiveSession(boardId: string): Promise<SessionRow | null> {
-  const { data, error } = await supabase
-    .from('sessions')
-    .select('*')
-    .eq('board_id', boardId)
-    .eq('status', 'active')
-    .maybeSingle();
+export async function createSession(deviceId: string, hostName: string): Promise<string> {
+  const { data, error } = await supabase.rpc('create_session', {
+    p_device_id: deviceId,
+    p_host_name: hostName,
+  });
   if (error) throw error;
-  return (data as SessionRow | null) ?? null;
+  return data as string;
 }
 
-async function expireStale(boardId: string): Promise<void> {
-  await supabase
-    .from('sessions')
-    .update({ status: 'expired' })
-    .eq('board_id', boardId)
-    .eq('status', 'active')
-    .lt('expires_at', new Date().toISOString());
-}
-
-export async function createOrJoinSession(
-  boardId: string,
-  deviceId: string
-): Promise<SessionContext> {
-  let existing = await fetchActiveSession(boardId);
-
-  if (existing && new Date(existing.expires_at).getTime() < Date.now()) {
-    await expireStale(boardId);
-    existing = null;
-  }
-
-  if (existing) {
-    return {
-      session: existing,
-      role: existing.host_device_id === deviceId ? 'host' : 'player',
-    };
-  }
-
-  const insert = await supabase
-    .from('sessions')
-    .insert({ board_id: boardId, host_device_id: deviceId })
-    .select()
-    .single();
-
-  if (insert.data) {
-    return { session: insert.data as SessionRow, role: 'host' };
-  }
-
-  if (isUniqueViolation(insert.error)) {
-    const winner = await fetchActiveSession(boardId);
-    if (!winner) throw new Error('Race resolved but no active session found');
-    return {
-      session: winner,
-      role: winner.host_device_id === deviceId ? 'host' : 'player',
-    };
-  }
-
-  throw insert.error;
-}
-
-export async function joinAsPlayer(
+export async function joinSession(
   sessionId: string,
   deviceId: string,
   name: string
@@ -94,27 +27,55 @@ export async function joinAsPlayer(
   return data as PlayerRow;
 }
 
-export async function rollDice(
+export async function fetchSession(sessionId: string): Promise<SessionRow> {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single();
+  if (error) throw error;
+  return data as SessionRow;
+}
+
+export async function fetchPlayer(
   sessionId: string,
-  deviceId: string,
-  playerName: string,
-  sides = 6
-): Promise<void> {
-  const value = Math.floor(Math.random() * sides) + 1;
-  const payload: DiceRollPayload = { device_id: deviceId, player_name: playerName, sides, value };
-  const { error } = await supabase.from('events').insert({
-    session_id: sessionId,
-    type: 'dice_roll',
-    payload,
+  deviceId: string
+): Promise<PlayerRow | null> {
+  const { data, error } = await supabase
+    .from('players')
+    .select('*')
+    .eq('session_id', sessionId)
+    .eq('device_id', deviceId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as PlayerRow | null) ?? null;
+}
+
+export async function startGame(sessionId: string, deviceId: string): Promise<void> {
+  const { error } = await supabase.rpc('start_game', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
   });
   if (error) throw error;
+}
+
+export async function takeTurn(
+  sessionId: string,
+  deviceId: string
+): Promise<TakeTurnResult> {
+  const { data, error } = await supabase.rpc('take_turn', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+  });
+  if (error) throw error;
+  return data as TakeTurnResult;
 }
 
 export async function endSession(sessionId: string): Promise<void> {
   const { error } = await supabase
     .from('sessions')
-    .update({ status: 'ended' })
+    .update({ phase: 'ended' })
     .eq('id', sessionId)
-    .eq('status', 'active');
+    .in('phase', ['lobby', 'playing']);
   if (error) throw error;
 }

@@ -1,8 +1,13 @@
+export type Phase = 'lobby' | 'playing' | 'finished' | 'ended' | 'expired';
+
 export type SessionRow = {
   id: string;
-  board_id: string;
   host_device_id: string;
-  status: 'active' | 'ended' | 'expired';
+  phase: Phase;
+  current_player_id: string | null;
+  winner_player_id: string | null;
+  dice_sides: number;
+  last_turn: LastTurn | null;
   created_at: string;
   expires_at: string;
 };
@@ -12,20 +17,30 @@ export type PlayerRow = {
   session_id: string;
   name: string;
   device_id: string;
+  position: number;
+  turn_order: number | null;
   joined_at: string;
+  finished_at: string | null;
 };
 
-export type EventRow = {
-  id: string;
-  session_id: string;
-  type: string;
-  payload: Record<string, unknown>;
-  created_at: string;
+export type ChallengeCard = {
+  prompt: string;
+  space: number;
+  move_back: number;
 };
 
-export type DiceRollPayload = {
-  device_id: string;
-  player_name: string;
-  sides: number;
-  value: number;
+export type LastTurn = {
+  by_player_id: string;
+  by_player_name: string;
+  roll: number;
+  cards: ChallengeCard[];
+  new_position: number;
+  outcome: 'continue' | 'win';
+};
+
+export type TakeTurnResult = {
+  roll: number;
+  cards: ChallengeCard[];
+  new_position: number;
+  outcome: 'continue' | 'win';
 };

@@ -1,13 +1,13 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Home from './routes/Home';
-import Board from './routes/Board';
+import Session from './routes/Session';
 
 export default function App() {
   return (
     <HashRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/b/:boardId" element={<Board />} />
+        <Route path="/s/:sessionId" element={<Session />} />
       </Routes>
     </HashRouter>
   );
