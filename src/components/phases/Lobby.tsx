@@ -5,6 +5,7 @@ import EndSessionButton from '../EndSessionButton';
 import ShareLink from '../ShareLink';
 import DicePicker from '../DicePicker';
 import ThemePicker from '../ThemePicker';
+import ModePicker from '../ModePicker';
 import RandomizeTurnsButton from '../RandomizeTurnsButton';
 import TurnOrder from '../TurnOrder';
 
@@ -52,6 +53,7 @@ export default function Lobby({ session, players, isHost, deviceId }: Props) {
       </section>
 
       <ThemePicker sessionId={session.id} deviceId={deviceId} current={session.theme} />
+      <ModePicker sessionId={session.id} deviceId={deviceId} current={session.deal_mode} />
       <DicePicker sessionId={session.id} deviceId={deviceId} current={session.dice_sides} />
 
       {isHost ? (

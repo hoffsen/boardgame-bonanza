@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { SessionRow, PlayerRow, TakeTurnResult, Theme } from '../types/db';
+import type { SessionRow, PlayerRow, TakeTurnResult, Theme, DealMode } from '../types/db';
 
 export async function createSession(deviceId: string, hostName: string): Promise<string> {
   const { data, error } = await supabase.rpc('create_session', {
@@ -98,6 +98,19 @@ export async function setTheme(
     p_session_id: sessionId,
     p_device_id: deviceId,
     p_theme: theme,
+  });
+  if (error) throw error;
+}
+
+export async function setDealMode(
+  sessionId: string,
+  deviceId: string,
+  mode: DealMode
+): Promise<void> {
+  const { error } = await supabase.rpc('set_deal_mode', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+    p_mode: mode,
   });
   if (error) throw error;
 }
