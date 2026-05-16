@@ -15,13 +15,18 @@ export async function joinSession(
   deviceId: string,
   name: string
 ): Promise<PlayerRow> {
+  const { error: insertError } = await supabase
+    .from('players')
+    .insert({ session_id: sessionId, device_id: deviceId, name });
+
+  // 23505 = unique_violation; means we're already a player. Anything else is fatal.
+  if (insertError && insertError.code !== '23505') throw insertError;
+
   const { data, error } = await supabase
     .from('players')
-    .upsert(
-      { session_id: sessionId, device_id: deviceId, name },
-      { onConflict: 'session_id,device_id' }
-    )
-    .select()
+    .select('*')
+    .eq('session_id', sessionId)
+    .eq('device_id', deviceId)
     .single();
   if (error) throw error;
   return data as PlayerRow;
