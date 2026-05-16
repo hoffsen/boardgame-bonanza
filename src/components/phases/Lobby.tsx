@@ -3,6 +3,10 @@ import PlayerList from '../PlayerList';
 import StartGameButton from '../StartGameButton';
 import EndSessionButton from '../EndSessionButton';
 import ShareLink from '../ShareLink';
+import DicePicker from '../DicePicker';
+import ThemePicker from '../ThemePicker';
+import RandomizeTurnsButton from '../RandomizeTurnsButton';
+import TurnOrder from '../TurnOrder';
 
 type Props = {
   session: SessionRow;
@@ -12,8 +16,10 @@ type Props = {
 };
 
 export default function Lobby({ session, players, isHost, deviceId }: Props) {
+  const alreadyRandomized = players.some((p) => p.turn_order !== null);
+
   return (
-    <main className="min-h-screen p-6 max-w-2xl mx-auto space-y-6">
+    <main className="min-h-screen p-6 max-w-2xl mx-auto space-y-5">
       <header className="flex items-baseline justify-between gap-3">
         <h1 className="text-2xl font-semibold">Lobby</h1>
         {isHost && <EndSessionButton sessionId={session.id} />}
@@ -32,6 +38,21 @@ export default function Lobby({ session, players, isHost, deviceId }: Props) {
           highlightId={null}
         />
       </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm uppercase tracking-wide text-slate-400">Turn order</h2>
+        <TurnOrder players={players} />
+        {isHost && (
+          <RandomizeTurnsButton
+            sessionId={session.id}
+            deviceId={deviceId}
+            alreadyRandomized={alreadyRandomized}
+          />
+        )}
+      </section>
+
+      <ThemePicker sessionId={session.id} deviceId={deviceId} current={session.theme} />
+      <DicePicker sessionId={session.id} deviceId={deviceId} current={session.dice_sides} />
 
       {isHost ? (
         <StartGameButton

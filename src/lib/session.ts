@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { SessionRow, PlayerRow, TakeTurnResult } from '../types/db';
+import type { SessionRow, PlayerRow, TakeTurnResult, Theme } from '../types/db';
 
 export async function createSession(deviceId: string, hostName: string): Promise<string> {
   const { data, error } = await supabase.rpc('create_session', {
@@ -74,6 +74,43 @@ export async function takeTurn(
   });
   if (error) throw error;
   return data as TakeTurnResult;
+}
+
+export async function setDice(
+  sessionId: string,
+  deviceId: string,
+  sides: number
+): Promise<void> {
+  const { error } = await supabase.rpc('set_dice', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+    p_sides: sides,
+  });
+  if (error) throw error;
+}
+
+export async function setTheme(
+  sessionId: string,
+  deviceId: string,
+  theme: Theme
+): Promise<void> {
+  const { error } = await supabase.rpc('set_theme', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+    p_theme: theme,
+  });
+  if (error) throw error;
+}
+
+export async function randomizeTurns(
+  sessionId: string,
+  deviceId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('randomize_turns', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+  });
+  if (error) throw error;
 }
 
 export async function endSession(sessionId: string): Promise<void> {

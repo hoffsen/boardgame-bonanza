@@ -5,6 +5,7 @@ import TurnBanner from '../TurnBanner';
 import RollButton from '../RollButton';
 import ChallengeChain from '../ChallengeChain';
 import EndSessionButton from '../EndSessionButton';
+import DicePicker from '../DicePicker';
 
 type Props = {
   session: SessionRow;
@@ -36,12 +37,14 @@ export default function Game({ session, players, me, isHost, deviceId }: Props) 
         highlightId={session.current_player_id}
       />
 
+      <DicePicker sessionId={session.id} deviceId={deviceId} current={session.dice_sides} />
+
       {isSpectator ? (
         <p className="text-slate-500 text-sm text-center">
           You joined mid-game — spectating until someone wins.
         </p>
       ) : myTurn ? (
-        <RollButton sessionId={session.id} deviceId={deviceId} />
+        <RollButton sessionId={session.id} deviceId={deviceId} sides={session.dice_sides} />
       ) : null}
 
       {session.last_turn && <ChallengeChain lastTurn={session.last_turn} />}

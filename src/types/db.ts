@@ -1,9 +1,12 @@
 export type Phase = 'lobby' | 'playing' | 'finished' | 'ended' | 'expired';
+export type Theme = 'goofy' | 'spicy' | 'heavy';
+export const THEMES: Theme[] = ['goofy', 'spicy', 'heavy'];
 
 export type SessionRow = {
   id: string;
   host_device_id: string;
   phase: Phase;
+  theme: Theme;
   current_player_id: string | null;
   winner_player_id: string | null;
   dice_sides: number;
