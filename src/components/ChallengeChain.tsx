@@ -1,11 +1,30 @@
 import type { LastTurn, ChallengeCard } from '../types/db';
+import InspirationButton from './InspirationButton';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  truth: 'Truth',
+  pickup_line: 'Pickup line',
+  philosophical: 'Deep question',
+  drink_reason: 'Drink reason',
+  confession: 'Confession',
+};
+
+function categoryLabel(c: string): string {
+  return CATEGORY_LABELS[c] ?? c.replace('_', ' ');
+}
 
 function StandardCard({
   card,
   prev,
+  sessionId,
+  deviceId,
+  hasDrawnInspiration,
 }: {
   card: ChallengeCard;
   prev: ChallengeCard | undefined;
+  sessionId: string;
+  deviceId: string;
+  hasDrawnInspiration: boolean;
 }) {
   const isMoveBack = prev !== undefined && prev.move_back > 0;
   return (
@@ -18,9 +37,22 @@ function StandardCard({
         ) : (
           <span className="text-slate-400">Landed on space {card.space}</span>
         )}
+        {card.inspiration_category && (
+          <span className="text-amber-300 ml-auto">
+            {categoryLabel(card.inspiration_category)}
+          </span>
+        )}
       </div>
-      <div className="rounded-lg bg-slate-900 ring-1 ring-slate-800 p-4 space-y-2">
+      <div className="rounded-lg bg-slate-900 ring-1 ring-slate-800 p-4 space-y-3">
         <p className="text-base leading-relaxed">{card.prompt}</p>
+        {card.inspiration_category && (
+          <InspirationButton
+            sessionId={sessionId}
+            deviceId={deviceId}
+            category={card.inspiration_category}
+            hasDrawn={hasDrawnInspiration}
+          />
+        )}
         {card.move_back > 0 && (
           <p className="text-xs text-amber-400 uppercase tracking-wide pt-1 border-t border-slate-800">
             this card sends you back {card.move_back}
@@ -34,14 +66,25 @@ function StandardCard({
 function DojoCard({
   card,
   rollerName,
+  sessionId,
+  deviceId,
+  hasDrawnInspiration,
 }: {
   card: ChallengeCard;
   rollerName: string;
+  sessionId: string;
+  deviceId: string;
+  hasDrawnInspiration: boolean;
 }) {
   return (
     <div className="space-y-1">
-      <div className="text-xs uppercase tracking-wide text-rose-300">
-        Stepped into the dojo — space {card.space}
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wide">
+        <span className="text-rose-300">Stepped into the dojo — space {card.space}</span>
+        {card.inspiration_category && (
+          <span className="text-amber-300 ml-auto">
+            {categoryLabel(card.inspiration_category)}
+          </span>
+        )}
       </div>
       <div className="rounded-lg bg-gradient-to-b from-rose-950 to-slate-900 ring-2 ring-rose-600 p-4 space-y-3">
         <div className="text-center text-rose-300 text-[10px] uppercase tracking-[0.3em] font-bold">
@@ -55,12 +98,30 @@ function DojoCard({
         <p className="text-base leading-relaxed text-center pt-1 border-t border-rose-900/60">
           {card.prompt}
         </p>
+        {card.inspiration_category && (
+          <div className="flex justify-center">
+            <InspirationButton
+              sessionId={sessionId}
+              deviceId={deviceId}
+              category={card.inspiration_category}
+              hasDrawn={hasDrawnInspiration}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-export default function ChallengeChain({ lastTurn }: { lastTurn: LastTurn }) {
+type Props = {
+  lastTurn: LastTurn;
+  sessionId: string;
+  deviceId: string;
+};
+
+export default function ChallengeChain({ lastTurn, sessionId, deviceId }: Props) {
+  const hasDrawnInspiration = !!lastTurn.drawn_inspiration;
+
   return (
     <section className="space-y-3">
       <div className="rounded-lg bg-indigo-950/60 ring-1 ring-indigo-800 p-4 text-center">
@@ -76,10 +137,37 @@ export default function ChallengeChain({ lastTurn }: { lastTurn: LastTurn }) {
       {lastTurn.cards.map((c, i) => {
         const prev = i > 0 ? lastTurn.cards[i - 1] : undefined;
         if (c.kind === 'dojo') {
-          return <DojoCard key={i} card={c} rollerName={lastTurn.by_player_name} />;
+          return (
+            <DojoCard
+              key={i}
+              card={c}
+              rollerName={lastTurn.by_player_name}
+              sessionId={sessionId}
+              deviceId={deviceId}
+              hasDrawnInspiration={hasDrawnInspiration}
+            />
+          );
         }
-        return <StandardCard key={i} card={c} prev={prev} />;
+        return (
+          <StandardCard
+            key={i}
+            card={c}
+            prev={prev}
+            sessionId={sessionId}
+            deviceId={deviceId}
+            hasDrawnInspiration={hasDrawnInspiration}
+          />
+        );
       })}
+
+      {lastTurn.drawn_inspiration && (
+        <div className="rounded-lg bg-amber-950/60 ring-1 ring-amber-700 p-4">
+          <p className="text-xs uppercase tracking-wide text-amber-300 mb-1">
+            Inspiration
+          </p>
+          <p className="text-base leading-relaxed">{lastTurn.drawn_inspiration}</p>
+        </div>
+      )}
     </section>
   );
 }

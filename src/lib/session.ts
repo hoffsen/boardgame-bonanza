@@ -150,3 +150,17 @@ export async function endSession(sessionId: string): Promise<void> {
     .in('phase', ['lobby', 'playing']);
   if (error) throw error;
 }
+
+export async function drawInspiration(
+  sessionId: string,
+  deviceId: string,
+  category: string
+): Promise<string | null> {
+  const { data, error } = await supabase.rpc('draw_inspiration', {
+    p_session_id: sessionId,
+    p_device_id: deviceId,
+    p_category: category,
+  });
+  if (error) throw error;
+  return (data as string | null) ?? null;
+}

@@ -85,7 +85,11 @@ export default function Game({ session, players, me, isHost, deviceId }: Props) 
               Spectating. You can join the next game.
             </p>
           ) : session.last_turn ? (
-            <ChallengeChain lastTurn={session.last_turn} />
+            <ChallengeChain
+              lastTurn={session.last_turn}
+              sessionId={session.id}
+              deviceId={deviceId}
+            />
           ) : (
             <EmptyState currentName={currentPlayer?.name} />
           )}

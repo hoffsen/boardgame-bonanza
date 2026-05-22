@@ -39,6 +39,7 @@ export type ChallengeCard = {
   kind: 'standard' | 'dojo';
   opponent_id: string | null;
   opponent_name: string | null;
+  inspiration_category: string | null;
 };
 
 export type LastTurn = {
@@ -48,6 +49,7 @@ export type LastTurn = {
   cards: ChallengeCard[];
   new_position: number;
   outcome: 'continue' | 'win';
+  drawn_inspiration: string | null;
 };
 
 export type TakeTurnResult = {
