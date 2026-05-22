@@ -101,11 +101,7 @@ export default function Game({ session, players, me, isHost, deviceId }: Props) 
              style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto space-y-2">
             {showRoll && (
-              <RollButton
-                sessionId={session.id}
-                deviceId={deviceId}
-                sides={session.dice_sides}
-              />
+              <RollButton sessionId={session.id} deviceId={deviceId} />
             )}
             {myRollIsPending && (
               <TurnActions sessionId={session.id} deviceId={deviceId} />
